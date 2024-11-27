@@ -1,8 +1,11 @@
 import com.microsoft.cognitiveservices.speech.*
+import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import java.io.File
 import java.util.*
+
+private val log = KotlinLogging.logger {}
 
 class AzureTextToSpeechGateway(
     private val azureSpeechKey: String,
@@ -46,6 +49,11 @@ class AzureTextToSpeechGateway(
         speechConfig.setSpeechSynthesisOutputFormat(SpeechSynthesisOutputFormat.Raw8Khz16BitMonoPcm)
 
         val speechSynthesizer = SpeechSynthesizer(speechConfig, null)
+
+        speechSynthesizer.SynthesisCanceled.addEventListener { _, e ->
+            val details = SpeechSynthesisCancellationDetails.fromResult(e.result)
+            log.error { "Cancelled: $details" }
+        }
 
         val speechSynthesisResult = speechSynthesizer.StartSpeakingText(text)
 
